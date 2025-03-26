@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
 import json
 import requests
+from pymongo import MongoClient
 
 # 從檔案中讀取存取令牌
 with open('../token.json', 'r') as token_file:
@@ -11,6 +12,11 @@ with open('../token.json', 'r') as token_file:
 app = Flask(__name__)
 CORS(app)  # 啟用CORS
 
+# 連接到 MongoDB
+client = MongoClient('localhost', 27017)
+db = client.summary
+collection = db.meetings
+
 @app.route('/conclusion', methods=['POST'])
 def conclusion():
     data = request.json
@@ -19,19 +25,22 @@ def conclusion():
     if not meeting_id:
         return jsonify({"error": "Meeting ID is required."}), 400
 
-    # 設置標頭
-    headers = {
-        'Authorization': f'Bearer {token}'
-    }
-    transcripts_url = f"https://graph.microsoft.com/v1.0/me/onlineMeetings/{meeting_id}/transcripts"
-    transcripts_response = requests.get(transcripts_url, headers=headers)
-    transcripts_data = transcripts_response.json()
-    
-    transcript_content_url = transcripts_data['value'][0]['transcriptContentUrl']
+    # 從 MongoDB 中查找對應的會議記錄
+    meeting_record = collection.find_one({'meeting_id': meeting_id})
+
+    if not meeting_record:
+        return jsonify({"error": "Meeting not found in database."}), 404
+
+    transcript_content_url = meeting_record.get('transcript_content_url')
+    print(transcript_content_url)
     if transcript_content_url:
+        # 設置標頭
+        headers = {
+            'Authorization': f'Bearer {token}'
+        }
         # 發送 GET 請求來讀取內容
         response = requests.get(f"{transcript_content_url}?$format=text/vtt", headers=headers)
-
+        print(response)
         # 檢查響應狀態碼
         if response.status_code == 200:
             transcript_content = response.text
@@ -45,7 +54,6 @@ def conclusion():
             return jsonify({"error": error_message}), response.status_code
     else:
         return jsonify({"error": "No transcript content URL available."}), 404
-
 
 # 定義一個 API 端點來提供 OpenAPI 規範文件
 @app.route("/openapi.yaml", methods=["GET"])
