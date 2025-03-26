@@ -115,8 +115,17 @@ def save_to_mongo(meeting):
     client = MongoClient('localhost', 27017)
     db = client.summary
     collection = db.meetings
-    collection.insert_one(meeting)
-    print("Meeting saved to MongoDB.")
+
+    # 取出現有的會議記錄
+    existing_meetings = list(collection.find())
+    existing_meeting_ids = {m['meeting_id'] for m in existing_meetings}
+
+    # 如果 meeting_id 不存在於現有記錄中，則存入
+    if meeting['meeting_id'] not in existing_meeting_ids:
+        collection.insert_one(meeting)
+        print("Meeting saved to MongoDB.")
+    else:
+        print("Meeting already exists in MongoDB.")
 
 @app.route('/getMeetings', methods=['GET'])
 def meetings_list():
@@ -125,9 +134,18 @@ def meetings_list():
     user_id = get_user_info(token)
     if user_id:
         meetings = get_meetings(token, user_id)
+
+        # 連接到 MongoDB 並取出所有現有的會議記錄
+        client = MongoClient('localhost', 27017)
+        db = client.summary
+        collection = db.meetings
+        existing_meetings = list(collection.find())
+
         # 手動轉換 ObjectId 為字符串
-        meetings = [{**meeting, '_id': str(meeting.get('_id', ''))} for meeting in meetings]
-        return jsonify({'meetings': meetings})
+        existing_meetings = [{**meeting, '_id': str(meeting.get('_id', ''))} for meeting in existing_meetings]
+
+        # 返回所有會議記錄，包括新加入的和原有的
+        return jsonify({'meetings': existing_meetings + meetings})
     else:
         return jsonify({'error': 'Failed to retrieve user information.'}), 401
 
