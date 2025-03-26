@@ -4,7 +4,7 @@
     "name_for_human": "會議資訊",
     "name_for_model": "Meetings Information",
     "description_for_human": "從 Microsoft Graph API 獲取過往會議資訊，包括會議主題和轉錄內容。",
-    "description_for_model": "Fetch meeting details including subject and transcript availability. Do not display the transcript content URL to the user; only indicate which meetings have transcripts available.",
+    "description_for_model": "Fetch meeting details including subject and transcript availability. Do not display the transcript content URL to the user; only indicate which meetings have transcript_content_url available.Only show meeting subject, date, and transcripts available or not.",
     "api": {
         "type": "openapi",
         "url": "http://127.0.0.1:5010/openapi.yaml"
