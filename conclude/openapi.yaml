@@ -11,7 +11,7 @@ paths:
   /conclusion:
     post:
       summary: 獲取會議文字紀錄並生成摘要
-      description: 接收會議的 meeting_id 並返回會議文字紀錄摘要。摘要應遵循指定的架構。
+      description: 接收會議的 subject 並返回會議文字紀錄摘要。摘要應遵循指定的架構。
       requestBody:
         required: true
         content:
@@ -19,10 +19,9 @@ paths:
             schema:
               type: object
               properties:
-                meeting_id:
+                subject:
                   type: string
-                  description: 會議的 ID
-                  example: "MSpmMzFlYjcwYy1jOGI5LTQ3MTUtOWRiNC03OGZlZDUxZDk5NTAqMCoqMTk6bWVldGluZ19PV0V3TWpVNU1qY3RObUZpTVMwME1XSXpMV0ZqWWpVdFlUYzBOVFEyWkRNNE5XTXpAdGhyZWFkLnYy"
+                  description: 會議的主題
       responses:
         '200':
           description: 成功獲取會議文字紀錄摘要

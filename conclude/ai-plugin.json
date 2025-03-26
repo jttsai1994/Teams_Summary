@@ -3,8 +3,8 @@
     "schema_version": "v1",
     "name_for_human": "會議紀錄摘要生成器",
     "name_for_model": "Meetings Summary Generator",
-    "description_for_human": "從 Microsoft Graph API 獲取過往會議資訊並生成會議紀錄摘要。",
-    "description_for_model": "Retrieve meeting transcripts and generate structured meeting summaries. The summary should follow a specified format including meeting details, objectives, agenda, and discussion points.The outcome will be written in Mandarin, with terms generally used in Taiwan",
+    "description_for_human": "從 Microsoft Graph API 獲取過往會議資訊並生成會議紀錄摘要。使用會議的主題 (subject) 來生成摘要。",
+    "description_for_model": "Retrieve meeting transcripts using subject and generate structured meeting summaries. The summary should follow a specified format including meeting details, objectives, agenda, and discussion points. The outcome will be written in Mandarin, with terms generally used in Taiwan.",
     "api": {
         "type": "openapi",
         "url": "http://127.0.0.1:5011/openapi.yaml"

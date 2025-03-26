@@ -20,19 +20,19 @@ collection = db.meetings
 @app.route('/conclusion', methods=['POST'])
 def conclusion():
     data = request.json
-    meeting_id = data.get('meeting_id')
+    subject = data.get('subject')
 
-    if not meeting_id:
-        return jsonify({"error": "Meeting ID is required."}), 400
+    if not subject:
+        return jsonify({"error": "Meeting subject is required."}), 400
 
     # 從 MongoDB 中查找對應的會議記錄
-    meeting_record = collection.find_one({'meeting_id': meeting_id})
+    meeting_record = collection.find_one({'subject': subject})
 
     if not meeting_record:
         return jsonify({"error": "Meeting not found in database."}), 404
 
     transcript_content_url = meeting_record.get('transcript_content_url')
-    print(transcript_content_url)
+    # print(transcript_content_url)
     if transcript_content_url:
         # 設置標頭
         headers = {
