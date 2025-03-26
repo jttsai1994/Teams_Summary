@@ -94,7 +94,7 @@ def get_meetings(token, user_id):
                             if 'value' in transcripts_data and len(transcripts_data['value']) > 0:
                                 transcript_content_url = transcripts_data['value'][0].get('transcriptContentUrl')
                                 if transcript_content_url:
-                                    meeting['transcript_url'] = transcript_content_url
+                                    meeting['transcript_content_url'] = transcript_content_url
                                     print(f"Transcript Content URL: {transcript_content_url}")
                                     # 將有文字紀錄的會議存入 MongoDB
                                     save_to_mongo(meeting)
@@ -141,8 +141,17 @@ def meetings_list():
         collection = db.meetings
         existing_meetings = list(collection.find())
 
-        # 手動轉換 ObjectId 為字符串
-        existing_meetings = [{**meeting, '_id': str(meeting.get('_id', ''))} for meeting in existing_meetings]
+        # 確保所有 ObjectId 被轉換為字符串
+        existing_meetings = [
+            {key: (str(value) if isinstance(value, ObjectId) else value) for key, value in meeting.items()}
+            for meeting in existing_meetings
+        ]
+
+        # 確保新 meetings 中的 ObjectId 也被轉換為字符串（如果有）
+        meetings = [
+            {key: (str(value) if isinstance(value, ObjectId) else value) for key, value in meeting.items()}
+            for meeting in meetings
+        ]
 
         # 返回所有會議記錄，包括新加入的和原有的
         return jsonify({'meetings': existing_meetings + meetings})
