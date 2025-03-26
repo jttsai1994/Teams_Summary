@@ -6,6 +6,7 @@ from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
 from pymongo import MongoClient
 from bson import ObjectId
+from openai import OpenAI
 
 app = Flask(__name__)
 CORS(app)  # 啟用CORS
@@ -18,6 +19,12 @@ class JSONEncoder(json.JSONEncoder):
         return super().default(o)
 
 app.json_encoder = JSONEncoder
+
+def load_config():
+    """從配置文件中讀取 API_KEY 和 ASSISTANT_ID"""
+    with open('config.json', 'r') as config_file:
+        config_data = json.load(config_file)
+        return config_data['API_KEY'], config_data['ASSISTANT_ID']
 
 def load_access_token():
     """從檔案中讀取存取令牌"""
@@ -43,7 +50,7 @@ def get_user_info(token):
         return None
 
 def get_meetings(token, user_id):
-    """使用存取令牌來取得過往會議資訊"""
+    """使用存取令牌來取得過往會議資訊並生成會議總結"""
     events_url = 'https://graph.microsoft.com/v1.0/me/events'
     headers = {'Authorization': f'Bearer {token}'}
     events_r = requests.get(events_url, headers=headers)
@@ -96,8 +103,22 @@ def get_meetings(token, user_id):
                                 if transcript_content_url:
                                     meeting['transcript_content_url'] = transcript_content_url
                                     print(f"Transcript Content URL: {transcript_content_url}")
-                                    # 將有文字紀錄的會議存入 MongoDB
-                                    save_to_mongo(meeting)
+                                    
+                                    # 獲取文字記錄
+                                    transcript_response = requests.get(f"{transcript_content_url}?$format=text/vtt", headers=headers)
+                                    if transcript_response.status_code == 200:
+                                        transcript_content = transcript_response.text
+                                        print("Transcript content retrieved successfully.")
+                                        
+                                        # 使用 OpenAI API 生成會議總結
+                                        summary = generate_summary(transcript_content)
+                                        meeting['summary'] = summary
+                                        print(f"Meeting Summary: {summary}")
+                                        
+                                        # 將有文字紀錄的會議存入 MongoDB
+                                        save_to_mongo(meeting)
+                                    else:
+                                        print(f"Failed to retrieve transcript content. Status code: {transcript_response.status_code}")
                                 else:
                                     print("No transcript content URL available.")
                             else:
@@ -109,6 +130,31 @@ def get_meetings(token, user_id):
                     else:
                         print("No online meeting details available.")
     return meetings
+
+def generate_summary(transcript_content):
+    """使用 OpenAI API 生成會議總結"""
+    API_KEY, ASSISTANT_ID = load_config()
+    ASSISTANT_API = 'https://prod.dvcbot.net/api/assts/v1'
+    
+    client = OpenAI(
+        base_url=ASSISTANT_API,
+        api_key=API_KEY,
+    )
+    
+    # 構建請求數據
+    request_data = {
+        "model": "text-davinci-003",  # 確保提供正確的模型名稱
+        "prompt": f"Please summarize the following meeting transcript:\n\n{transcript_content}",
+        "max_tokens": 150,  # 您可以根據需要調整 max_tokens
+        "temperature": 0.7  # 您可以根據需要調整 temperature
+    }
+    
+    # 發送請求到 OpenAI API
+    response = client.completions.create(**request_data)
+    
+    # 獲取生成的總結
+    summary = response.choices[0].text.strip()
+    return summary
 
 def save_to_mongo(meeting):
     """將會議資訊存入 MongoDB"""
