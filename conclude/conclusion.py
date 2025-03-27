@@ -29,7 +29,7 @@ def conclusion():
     meeting_record = collection.find_one({'subject': subject})
 
     if not meeting_record:
-        return jsonify({"error": "Meeting not found in database."}), 404
+        return jsonify({"error": "Meeting not found in database.Please input the identical Meeting Subject again."}), 404
 
     transcript_content_url = meeting_record.get('transcript_content_url')
     # print(transcript_content_url)
