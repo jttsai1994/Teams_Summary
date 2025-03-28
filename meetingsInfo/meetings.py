@@ -6,11 +6,16 @@ from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
 from pymongo import MongoClient
 from bson import ObjectId
-from openai import OpenAI
-
+from summary_utils import generate_summary
 app = Flask(__name__)
 CORS(app)  # 啟用CORS
 
+def load_config():
+    """從配置文件中讀取 API_KEY 和 ASSISTANT_ID"""
+    with open('../../params/config.json', 'r') as config_file:
+        config_data = json.load(config_file)
+        return config_data['API_KEY'], config_data['ASSISTANT_ID']
+    
 class JSONEncoder(json.JSONEncoder):
     """自定義 JSON 編碼器，用於處理 ObjectId"""
     def default(self, o):
@@ -19,12 +24,6 @@ class JSONEncoder(json.JSONEncoder):
         return super().default(o)
 
 app.json_encoder = JSONEncoder
-
-def load_config():
-    """從配置文件中讀取 API_KEY 和 ASSISTANT_ID"""
-    with open('config.json', 'r') as config_file:
-        config_data = json.load(config_file)
-        return config_data['API_KEY'], config_data['ASSISTANT_ID']
 
 def load_access_token():
     """從檔案中讀取存取令牌"""
@@ -111,7 +110,8 @@ def get_meetings(token, user_id):
                                         print("Transcript content retrieved successfully.")
                                         
                                         # 使用 OpenAI API 生成會議總結
-                                        summary = generate_summary(transcript_content)
+                                        API_KEY, ASSISTANT_ID = load_config()
+                                        summary = generate_summary(transcript_content, API_KEY, ASSISTANT_ID)
                                         meeting['summary'] = summary
                                         print(f"Meeting Summary: {summary}")
                                         
@@ -130,31 +130,6 @@ def get_meetings(token, user_id):
                     else:
                         print("No online meeting details available.")
     return meetings
-
-def generate_summary(transcript_content):
-    """使用 OpenAI API 生成會議總結"""
-    API_KEY, ASSISTANT_ID = load_config()
-    ASSISTANT_API = 'https://prod.dvcbot.net/api/assts/v1'
-    
-    client = OpenAI(
-        base_url=ASSISTANT_API,
-        api_key=API_KEY,
-    )
-    
-    # 構建請求數據
-    request_data = {
-        "model": "text-davinci-003",  # 確保提供正確的模型名稱
-        "prompt": f"Please summarize the following meeting transcript:\n\n{transcript_content}",
-        "max_tokens": 150,  # 您可以根據需要調整 max_tokens
-        "temperature": 0.7  # 您可以根據需要調整 temperature
-    }
-    
-    # 發送請求到 OpenAI API
-    response = client.completions.create(**request_data)
-    
-    # 獲取生成的總結
-    summary = response.choices[0].text.strip()
-    return summary
 
 def save_to_mongo(meeting):
     """將會議資訊存入 MongoDB"""
