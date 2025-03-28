@@ -1,7 +1,6 @@
 from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
 import json
-import requests
 from pymongo import MongoClient
 
 # 從檔案中讀取存取令牌
@@ -29,31 +28,16 @@ def conclusion():
     meeting_record = collection.find_one({'subject': subject})
 
     if not meeting_record:
-        return jsonify({"error": "Meeting not found in database.Please input the identical Meeting Subject again."}), 404
+        return jsonify({"error": "Meeting not found in database. Please input the identical Meeting Subject again."}), 404
 
-    transcript_content_url = meeting_record.get('transcript_content_url')
-    # print(transcript_content_url)
-    if transcript_content_url:
-        # 設置標頭
-        headers = {
-            'Authorization': f'Bearer {token}'
-        }
-        # 發送 GET 請求來讀取內容
-        response = requests.get(f"{transcript_content_url}?$format=text/vtt", headers=headers)
-        print(response)
-        # 檢查響應狀態碼
-        if response.status_code == 200:
-            transcript_content = response.text
-            print("Transcript content retrieved successfully.")
-            
-            # 回傳文字紀錄給 DaVinci LLM
-            return Response(transcript_content, mimetype='text/vtt')
-        else:
-            error_message = f"Failed to retrieve content. Status code: {response.status_code}"
-            print(error_message)
-            return jsonify({"error": error_message}), response.status_code
-    else:
-        return jsonify({"error": "No transcript content URL available."}), 404
+    # 提取 subject, date, 和 summary
+    meeting_info = {
+        "subject": meeting_record.get('subject'),
+        "date": meeting_record.get('date'),
+        "summary": meeting_record.get('summary')
+    }
+
+    return jsonify(meeting_info)
 
 # 定義一個 API 端點來提供 OpenAPI 規範文件
 @app.route("/openapi.yaml", methods=["GET"])
