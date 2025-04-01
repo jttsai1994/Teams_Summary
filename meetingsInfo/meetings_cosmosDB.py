@@ -65,6 +65,14 @@ def get_meetings(token, user_id):
     # 取得目前的 UTC 時間
     current_time = datetime.now(timezone.utc)
 
+    # 連接到 Cosmos DB
+    connection_string = load_cosmos_connection_string()
+    client = CosmosClient.from_connection_string(connection_string)
+    database_name = 'summary'
+    container_name = 'meetings'
+    database = client.get_database_client(database_name)
+    container = database.get_container_client(container_name)
+
     meetings = []
     for event in events.get('value', []):
         # 取得事件的開始時間
@@ -100,6 +108,14 @@ def get_meetings(token, user_id):
                             meeting_id = meetings_data['value'][0]['id']
                             print(f"Meeting ID: {meeting_id}")
                             meeting['meeting_id'] = meeting_id
+
+                            # 檢查會議是否已存在於 Cosmos DB
+                            query = f"SELECT * FROM c WHERE c.meeting_id = '{meeting_id}'"
+                            items = list(container.query_items(query=query, enable_cross_partition_query=True))
+                            if items:
+                                print(f"Meeting with ID {meeting_id} already exists in Cosmos DB. Skipping.")
+                                continue  # 跳過已存在的會議
+
                             transcripts_url = f"https://graph.microsoft.com/v1.0/me/onlineMeetings/{meeting_id}/transcripts"
                             transcripts_response = requests.get(transcripts_url, headers=headers)
                             transcripts_data = transcripts_response.json()
@@ -130,8 +146,6 @@ def get_meetings(token, user_id):
                                     print("No transcript content URL available.")
                             else:
                                 print("No transcripts available for this meeting.")
-                        else:
-                            print("Meeting not found or no valid meeting ID returned.")
                         
                         meetings.append(meeting)
                     else:
