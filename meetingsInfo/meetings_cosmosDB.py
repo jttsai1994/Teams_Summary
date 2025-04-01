@@ -112,9 +112,10 @@ def get_meetings(token, user_id):
                             # 檢查會議是否已存在於 Cosmos DB
                             query = f"SELECT * FROM c WHERE c.meeting_id = '{meeting_id}'"
                             items = list(container.query_items(query=query, enable_cross_partition_query=True))
+                            print(f"Query returned {len(items)} items.")
                             if items:
                                 print(f"Meeting with ID {meeting_id} already exists in Cosmos DB. Skipping.")
-                                continue  # 跳過已存在的會議
+                                continue# 跳過已存在的會議
 
                             transcripts_url = f"https://graph.microsoft.com/v1.0/me/onlineMeetings/{meeting_id}/transcripts"
                             transcripts_response = requests.get(transcripts_url, headers=headers)
