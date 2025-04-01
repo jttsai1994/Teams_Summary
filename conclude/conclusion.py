@@ -3,11 +3,6 @@ from flask_cors import CORS
 import json
 from pymongo import MongoClient
 
-# 從檔案中讀取存取令牌
-with open('../token.json', 'r') as token_file:
-    token_data = json.load(token_file)
-    token = token_data.get('access_token')
-
 app = Flask(__name__)
 CORS(app)  # 啟用CORS
 
