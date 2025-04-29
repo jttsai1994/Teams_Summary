@@ -1,0 +1,89 @@
+openapi: 3.0.1
+info:
+  title: 會議總結 API from Azure Function
+  description: 從Cosmos DB獲取過往指定會議摘要
+  version: 1.0.0
+servers:
+  - url: https://teams-assistant-prod.azurewebsites.net/conclusion
+    description: Azure Functions
+
+paths:
+  /conclusion:
+    post:
+      summary: 獲取指定會議總結 
+      description: 接收會議的 subject 並返回會議文字紀錄摘要。摘要應遵循指定的架構。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                subject:
+                  type: string
+                  description: 會議的主題
+      responses:
+        '200':
+          description: 成功獲取會議文字紀錄摘要
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  summary:
+                    type: string
+                    description: 會議紀錄摘要，遵循指定的架構
+                    example: |
+                      會議基本資訊:
+                      - 會議日期和時間: YYYY-MM-DD HH:MM
+                      - 會議地點: 線上
+                      - 參加者名單: John Doe, Jane Smith
+                      - 主持人: Alice Johnson
+                      會議目標:
+                      - 簡要說明會議的主要目標或議題
+                      議程摘要:
+                      - 議程項目1: 簡要說明
+                      - 議程項目2: 簡要說明
+                      討論要點:
+                      - 各議題的關鍵討論點
+                      - 重要的數據或事實
+                      - 各方的主要觀點
+        '400':
+          description: 錯誤的請求
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 錯誤訊息
+        '404':
+          description: 找不到會議或轉錄內容
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 錯誤訊息
+        '500':
+          description: 內部伺服器錯誤
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 錯誤訊息
+
+components:
+  schemas:
+    MeetingSummary:
+      type: object
+      properties:
+        summary:
+          type: string
+          description: 會議紀錄摘要

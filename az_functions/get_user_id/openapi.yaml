@@ -1,0 +1,65 @@
+openapi: 3.0.1
+info:
+  title: 使用者 ID API from Azure Function
+  description: 從 Azure Graph API 根據使用者 Email 獲取 User ID
+  version: 1.0.0
+servers:
+  - url: https://teams-assistant-test.azurewebsites.net/get_user_id
+    description: Azure Functions
+
+paths:
+  /get_user_id:
+    post:
+      summary: 獲取使用者 ID
+      description: 接收 Azure 註冊的 Email，並返回對應的 User ID。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: Azure 註冊的 Email
+      responses:
+        '200':
+          description: 成功獲取使用者 ID
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user_id:
+                    type: string
+                    description: 使用者的唯一 ID
+        '400':
+          description: 錯誤的請求
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 錯誤訊息
+        '401':
+          description: 未授權
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 錯誤訊息
+        '500':
+          description: 內部伺服器錯誤
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 錯誤訊息

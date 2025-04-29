@@ -1,0 +1,12 @@
+{
+    "id": "SummaryAPI_Azfunction_prod",
+    "schema_version": "v1",
+    "name_for_human": "會議摘要 Azure Functions_prod",
+    "name_for_model": "Meetings Summary Generator_prod",
+    "description_for_human": "從Cosmos DB獲取過往指定會議摘要。使用會議的主題 (subject) 來查詢DB。",
+    "description_for_model": "Retrieve meeting summaries from cosmosDB using subject. The summary should follow a specified format including meeting details, objectives, agenda, and discussion points. The outcome will be written in Mandarin, with terms generally used in Taiwan.",
+    "api": {
+        "type": "openapi",
+        "url": "https://teams-assistant-prod.azurewebsites.net/conclusion/openapi.yaml"
+    }
+}

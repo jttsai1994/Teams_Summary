@@ -1,0 +1,12 @@
+{
+    "id": "User_azure_ID_test",
+    "schema_version": "v1",
+    "name_for_human": "使用者azure帳號ID_test",
+    "name_for_model": "Meetings Information_test",
+    "description_for_human": "使用者輸入User principal name,即登入Azure的email, 從 Microsoft Graph API 返回使用者的Object ID",
+    "description_for_model": "The user inputs the User Principal Name, which is the email used to log in to Azure, and retrieves the user's Object ID from the Microsoft Graph API",
+    "api": {
+        "type": "openapi",
+        "url": "https://teams-assistant-test.azurewebsites.net/get_user_id/openapi.yaml"
+    }
+}

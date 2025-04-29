@@ -1,0 +1,61 @@
+openapi: 3.0.1
+info:
+  title: 會議資訊 API from Azure Function
+  description: 從 Microsoft Graph API 獲取過往會議資訊的 API
+  version: 1.0.0
+servers:
+  - url: https://teams-assistant-prod.azurewebsites.net/get_meetings?
+    description: Azure Functions
+
+paths:
+  /getMeetings:
+    get:
+      summary: 獲取會議列表
+      description: 獲取使用者的過往會議資訊，包括會議主題和轉錄內容 URL
+      responses:
+        '200':
+          description: 成功獲取會議資訊
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  meetings:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Meeting'
+        '401':
+          description: 存取令牌過期或使用者資訊無法獲取
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 錯誤訊息
+        '500':
+          description: 內部伺服器錯誤
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 錯誤訊息
+
+components:
+  schemas:
+    Meeting:
+      type: object
+      properties:
+        subject:
+          type: string
+          description: 會議主題
+        Meeting ID:
+          type: string
+          description: 會議 ID
+        transcript_content_url:
+          type: string
+          description: 轉錄內容 URL
